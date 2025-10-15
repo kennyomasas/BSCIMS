@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Barangay Officials</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+              :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --dark-gradient: linear-gradient(135deg, #434343 0%, #000000 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-primary: 0 8px 32px rgba(102, 126, 234, 0.2);
+            --shadow-secondary: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        body {
+        overflow: hidden; /* Prevents scrolling */
+        
+        }
+        /* Custom Styles */
+        .table-container {
+            max-height: 500px; /* Set a fixed height for the scrollable area */
+            overflow-y: auto; /* Enable vertical scrolling */
+            border: 2px solid #ccc; /* Optional: Add border for better visibility */
+            margin: 20px; /* Add margin for spacing */
+            width: calc(100% - 40px); /* Adjust width to fit within the main content */
+        }
+
+        .official-table th,
+        .official-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ccc;
+        }
+
+        .official-table th {
+            background-color: #f4f4f4;
+            position: sticky; /* Make headers sticky */
+            top: 0; /* Stick to the top of the container */
+            z-index: 1; /* Ensure headers are above the body */
+        }
+
+        .official-table tbody tr:hover {
+            background-color: #f1f1f1; /* Add hover effect for rows */
+            cursor: pointer;
+        }
+
+        .selected {
+            background-color: #d1e7ff !important;
+        }
+        .action-buttons {
+            margin-top: -15px;
+            margin-left: 670px;
+        }
+
+        /* Sidebar Hover Effect */
+        .sidebar-item {
+            transition: background 0.3s ease-in-out, padding-left 0.3s ease-in-out;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            padding-left: 10px;
+        }
+
+        /* Dropdown Menu - Show on Hover */
+        .dropdown:hover .dropdown-menu {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        /* Smooth Dropdown Animation */
+        .animate-dropdown {
+            display: none;
+            opacity: 0;
+            transform: translateY(-5px);
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        .dropdown:hover .animate-dropdown {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Optional: Adjust Dropdown Width */
+        .dropdown-menu {
+            min-width: 180px;
+        }
+
+        /* Animate BSCIMS */
+        .animated-title {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .animated-title:hover {
+            transform: scale(1.1);
+            color: #eff319; /* Change to any color you like */
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            margin-left: 228px; /* Match the sidebar width */
+            width: calc(100% - 228px); /* Adjust width to fit the remaining space */
+            padding: 20px; /* Add padding for spacing */
+        }
+
+        /* Header Section Styling */
+        .header-section {
+            background-color: #1b262c; /* Dark blue-gray background */
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px; /* Add margin for spacing */
+            border-radius: 8px; /* Optional: Add rounded corners */
+        }
+        #addOfficialBtn {
+            margin-right: 10px; /* Adds space between Add Official and Edit button */
+            margin-top: 0px;
+            margin-left: -540px;
+        }
+
+        
+
+        
+        /* Style for the term dropdown */
+        #termDropdown {
+            margin-right: 10px;
+            margin-top: 0px;
+            margin-left: 110px;
+            width: 150px;
+        }
+
+        /* Term info badge */
+        .term-info {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin-left: 10px;
+            font-size: 12px;
+            color: #1976d2;
+        }
+
+        /* Warning for term limit */
+        .term-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        .term-full {
+            background-color: #f8d7da;
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+
+
+        /*add official modal modern design */
+        .modal-backdrop {
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .modal {
+            --bs-modal-border-radius: 20px;
+        }
+
+        .modal-dialog {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal.show .modal-dialog {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 
+                        0 0 0 1px rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .modal-header {
+            border: none;
+            padding: 2rem 2rem 1rem;
+            background: transparent;
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-title::before {
+            content: '\f007';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+            padding: 12px;
+            border-radius: 50%;
+            position: relative;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+            background: rgba(244, 67, 54, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 1rem 2rem 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            border-radius: 16px;
+            padding: 16px 20px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+            outline: none;
+            transform: translateY(-2px);
+        }
+
+        .form-control:hover, .form-select:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-custom {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border: 2px dashed rgba(102, 126, 234, 0.3);
+            border-radius: 16px;
+            background: rgba(102, 126, 234, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-custom:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .file-input-custom i {
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+
+        .file-input-text {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            border: none;
+            padding: 1rem 2rem 2rem;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        
+
+        .form-floating {
+            position: relative;
+        }
+
+        .floating-label {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background: white;
+            padding: 0 8px;
+            color: #9ca3af;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            font-size: 1rem;
+        }
+
+        .form-control:focus + .floating-label,
+        .form-control:not(:placeholder-shown) + .floating-label {
+            top: 0;
+            font-size: 0.75rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal.show .modal-content {
+            animation: slideIn 0.3s ease-out;
+        }
+
+       /* Toast Notification Styles */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.custom-toast {
+    min-width: 350px;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    animation: slideInRight 0.3s ease-out;
+}
+
+.toast-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.toast-error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.toast-header {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-weight: 600;
+}
+
+.toast-body {
+    color: inherit;
+    font-size: 14px;
+}
+
+.btn-close-white {
+    filter: invert(1);
+    opacity: 0.8;
+}
+
+.btn-close-white:hover {
+    opacity: 1;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.toast.hiding {
+    animation: slideOutRight 0.3s ease-in;
+}
+
+ /* Notification Badge Styles */
+        .notification-badge {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: linear-gradient(45deg, #ff4757, #ff3742);
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            animation: pulse-notification 2s infinite;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+        }
+
+        @keyframes pulse-notification {
+            0% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4); }
+            50% { transform: scale(1.1); box-shadow: 0 4px 12px rgba(255, 71, 87, 0.6); }
+            100% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4); }
+        }
+
+        /* Hide badge when count is 0 */
+        .notification-badge.hidden {
+            display: none;
+        }
+
+        /* Additional styles for new request indicator */
+        .new-request-glow {
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+            border-left: 3px solid #ff4757;
+        }
+
+        .content-area {
+            margin-left: 235px;
+            padding: 20px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+         /* Active page indicator styles - grey theme */
+.sidebar-item.active {
+    background: linear-gradient(135deg, #6e6e6e 0%, #6e6e6e 100%);
+    
+    border-left: 4px solid #eff1f1; /* Accent color */
+    transform: translateX(8px);
+    color: #fff !important;
+}       
+
+        .sidebar-item.active::before {
+            content: '';
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 8px solid #eef1f3;
+        }
+
+        .animated-title {
+            animation: pulse 2s infinite;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .dropdown-menu {
+            background-color: #2c3138;
+            border: 1px solid #495057;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .dropdown-item {
+            color: #fff;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transform: translateX(5px);
+        }
+
+        .dropdown-item.active {
+            background: linear-gradient(135deg, #6e6e6e 0%, #6e6e6e 100%);
+            color: #fff;
+            
+        }
+
+        .animate-dropdown {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse-notification {
+            0% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4); }
+            50% { transform: scale(1.1); box-shadow: 0 4px 12px rgba(255, 71, 87, 0.6); }
+            100% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4); }
+        }
+
+        .new-request-glow {
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+            border-left: 3px solid #ff4757;
+        }
+
+        /* Content area styles */
+        .content-area {
+            margin-left: 235px;
+            padding: 20px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        /* Page indicator styles for different sections */
+        .page-indicator {
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-item.active .page-indicator {
+            opacity: 1;
+        }
+
+        /* Glow effect for active items */
+        .sidebar-item.active {
+            position: relative;
+            overflow: visible;
+        }
+
+        /* Edit Action Styles */
+.action-btn {
+    background: none;
+    border: none;
+    padding: 6px 10px;
+    margin: 0 2px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.edit-btn {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.edit-btn:hover {
+    background-color: rgba(0, 123, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.save-btn {
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.save-btn:hover {
+    background-color: rgba(40, 167, 69, 0.2);
+}
+
+.cancel-btn {
+    color: #6c757d;
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+.cancel-btn:hover {
+    background-color: rgba(108, 117, 125, 0.2);
+}
+
+.delete-btn {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.delete-btn:hover {
+    background-color: rgba(220, 53, 69, 0.2);
+}
+
+/* Inline editing styles */
+.edit-input {
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 14px;
+    width: 100%;
+    background-color: #f8f9fa;
+}
+
+.edit-select {
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 14px;
+    width: 100%;
+    background-color: #f8f9fa;
+}
+
+.editing-row {
+    background-color: #e3f2fd !important;
+}
+
+#updateOfficialBtn {
+    margin-right: 10px;
+    margin-top: 0px;
+    margin-left: 10px;
+}
+
+#updateOfficialBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+    </style>
+</head>
+<body class="bg-light">
+    <div class="d-flex">
+
+        <!-- Sidebar -->
+<nav class="text-white vh-100 p-3 sidebar" style="width: 235px; background-color: #31363F;">
+    <div class="mb-4" style="margin-left: 19px;">
+        <h2 class="fs-4 animated-title">BSCIMS</h2>
+    </div>
+    <ul class="nav flex-column">
+        <li class="nav-item mb-3" style="margin-top: 30px;">
+            <a href="dashboard.php" class="nav-link text-white d-flex align-items-center sidebar-item">
+                <i class="fas fa-home me-2"></i> Main Dashboard
+            </a>
+        </li>
+        <li class="nav-item dropdown mb-3">
+            <a href="#" id="officialsBtn" class="nav-link text-white d-flex align-items-center sidebar-item dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" ata-page="officials">
+                <i class="fas fa-users me-2"></i> Barangay Officials
+                <div class="page-indicator"></div>
+            </a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="Barangay_official.php">View Officials</a></li>
+                <li><a class="dropdown-item" href="manage_official.html" data-page="manage-officials">Manage Officials</a></li>
+            </ul>
+        </li>
+        <li class="nav-item mb-3 dropdown">
+            <a class="nav-link dropdown-toggle text-white d-flex align-items-center sidebar-item">
+                <i class="fas fa-user-friends me-2"></i> Barangay Residents
+            </a>
+            <ul class="dropdown-menu animate-dropdown">
+                <li><a class="dropdown-item" href="Residents.html">Register Residents</a></li>
+                <li><a class="dropdown-item" href="view_residents.php">Registered Residents</a></li>
+            </ul>
+        </li>
+
+        <!-- ENHANCED CITIZEN REQUESTS WITH NOTIFICATION -->
+            <li class="nav-item mb-3 dropdown">
+                <a class="nav-link dropdown-toggle text-white d-flex align-items-center sidebar-item" id="citizen-requests-link">
+                    <i class="fas fa-file-alt me-2"></i> Citizen Requests
+                    <!-- Notification Badge -->
+                    <span class="notification-badge" id="request-notification-badge">0</span>
+                </a>
+                <ul class="dropdown-menu animate-dropdown">
+                    <li><a class="dropdown-item" href="Request_Documents.php">Request Documents</a></li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center justify-content-between" href="Issued Certificate.html">
+                            Certificate Issuance
+                            <span class="badge bg-danger ms-2" id="pending-requests-mini-badge" style="display: none;">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+        <li class="nav-item mb-3">
+            <a class="nav-link text-white d-flex align-items-center sidebar-item" href="Administration.php">
+                <i class="fas fa-building me-2"></i> Administration
+            </a>
+        </li>
+        <li class="nav-item mb-3">
+            <a href="Announcement.html" class="nav-link text-white d-flex align-items-center sidebar-item">
+                <i class="fas fa-bullhorn me-2"></i> Announcements
+            </a>
+        </li>
+        <li class="nav-item mb-3">
+            <a href="list_admins.php" class="nav-link text-white d-flex align-items-center sidebar-item">
+                <i class="fas fa-cog me-2"></i> System Settings
+            </a>
+        </li>
+        <li class="nav-item mb-3">
+            <a class="nav-link text-white d-flex align-items-center sidebar-item" href="request_reports.php">
+                <i class="fas fa-chart-bar me-2"></i> Reports
+            </a>
+        </li>
+         <li class="nav-item mt-auto">
+            <a href="logout.php" class="nav-link text-white d-flex align-items-center sidebar-item">
+                <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </a>
+        </li>
+    </ul>
+</nav>
+
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header Section -->
+            <div class="header-section d-flex p-3 align-items-center" style="margin-left: -248px; margin-right: -48px; margin-top: -21px; border-radius: 1px;">
+                <img src="logo.png" alt="Logo" class="me-2" width="30" height="30">
+                <h1 class="fs-4 mb-1">Manage Barangay Officials</h1>
+            </div>
+
+           <!-- Buttons -->
+<div class="action-buttons" >
+   
+    <button id="addOfficialBtn" class="btn btn-success" disabled title="Select a term first">
+        <i class="fas fa-user-plus" ></i> Add Official
+    </button>
+
+     <!-- ADD THIS UPDATE BUTTON -->
+    <button id="updateOfficialBtn" class="btn btn-warning" disabled title="Select an official to update">
+        <i class="fas fa-edit"></i> Update
+    </button>
+    
+    <!-- Term Dropdown and Add Term Button -->
+    <div class="d-inline-flex align-items-center" >
+        <select id="termDropdown" class="form-select form-select-sm">
+            <option value="" disabled selected>Select Term</option>
+            <option value="2022-2025">2022-2025</option>
+            <option value="2025-2028">2025-2028</option>
+            <option value="2028-2031">2028-2031</option>
+        </select>
+        <button id="addTermBtn" class="btn btn-outline-secondary btn-sm ms-1" title="Add New Term">
+            <i class="fas fa-plus"></i>
+        </button>
+        <span id="termInfo" class="term-info" style="display: none;"></span>
+    </div>
+</div>
+   
+        <!-- Add Search Bar Above the Table -->
+        <div class="d-flex justify-content-between align-items-center mb-3" style="margin-left: -245px; margin-right: -48px; margin-top: -57px;">
+            <input type="text" id="searchInput" class="form-control w-25" placeholder="Search officials..." onkeyup="searchTable()">
+        </div>
+
+            <!-- Official Table -->
+            <div class="official-table" id="official-table" style="margin-left: -267px; margin-right: 55px; margin-top: -13px;">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                            
+                                <th>Photo</th>
+                                <th>Complete Name</th>
+                                <th>Committee</th>
+                                <th>Position</th>
+                                <th id="termColumn" style="display: none;">Term</th>
+                                 <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="officials-table-body">
+                            <!-- Data will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  
+<!-- Modern Modal -->
+    <div class="modal fade" id="officialModal" tabindex="-1" aria-labelledby="officialModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="officialModalLabel">Add Barangay Official</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <form id="official-form-data" enctype="multipart/form-data">
+                        <!-- Complete Name -->
+                        <div class="form-group icon-field">
+                            <label class="form-label">
+                                <i class="fas fa-user"></i>
+                                Complete Name
+                            </label>
+                            
+                            <input type="text" class="form-control" name="official_name" placeholder="Enter full name" required>
+                        </div>
+
+                        <!-- Committee -->
+                        <div class="form-group icon-field">
+                            <label class="form-label">
+                                <i class="fas fa-users"></i>
+                                Committee
+                            </label>
+                            
+                            <select class="form-select" name="official_mobile" required>
+                                <option value="" disabled selected>Select Committee</option>
+                                <option value="Punong Barangay">Punong Barangay</option>
+                                <option value="Appropriation badac tourism">Appropriation, Budget & Tourism</option>
+                                <option value="Bdrrmc good governance">BDRRMC & Good Governance</option>
+                                <option value="Education and agriculture">Education & Agriculture</option>
+                                <option value="Health nutrition and environment">Health, Nutrition & Environment</option>
+                                <option value="Infrastructure">Infrastructure</option>
+                                <option value="Peace & order">Peace & Order</option>
+                                <option value="Secretary">Secretary</option>
+                                <option value="Sk Chairman">SK Chairman</option>
+                                <option value="Social services vawc and bcp">Social Services, VAWC & BCP</option>
+                                <option value="Treasurer">Treasurer</option>
+                            </select>
+                        </div>
+
+                        <!-- Position -->
+                        <div class="form-group icon-field">
+                            <label class="form-label">
+                                <i class="fas fa-id-badge"></i>
+                                Position
+                            </label>
+                            
+                            <select class="form-select" name="official_position" required>
+                                <option value="" disabled selected>Select Position</option>
+                                <option value="Punong Barangay">Punong Barangay</option>
+                                <option value="Sangguniang Barangay Member">Sangguniang Barangay Member</option>
+                                <option value="Barangay Secretary">Barangay Secretary</option>
+                                <option value="Barangay Treasurer">Barangay Treasurer</option>
+                                <option value="SK Chairman">SK Chairman</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Term -->
+                        <div class="form-group icon-field">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt"></i>
+                                Term
+                            </label>
+                           
+                            <select class="form-select" name="official_term" required>
+                                <option value="" disabled selected>Select Term</option>
+                                <option value="2022-2025">2022-2025</option>
+                                <option value="2025-2028">2025-2028</option>
+                                <option value="2028-2031">2028-2031</option>
+                            </select>
+                        </div>
+
+                        <!-- Photo Upload -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-camera"></i>
+                                Official Photo
+                            </label>
+                            <div class="file-input-wrapper">
+                                <div class="file-input-custom">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span class="file-input-text">Choose photo or drag & drop here</span>
+                                    <input type="file" name="official_photo" accept="image/*" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Footer -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button type="reset" class="btn btn-dark">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> Save Official
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<!-- Add Term Modal -->
+<div class="modal fade" id="addTermModal" tabindex="-1" aria-labelledby="addTermModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTermModalLabel">Add New Term</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <form id="add-term-form">
+                    <div class="mb-3">
+                        <label for="startYear" class="form-label">Start Year</label>
+                        <input type="number" class="form-control" id="startYear" min="2000" max="2100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="endYear" class="form-label">End Year</label>
+                        <input type="number" class="form-control" id="endYear" min="2000" max="2100" required>
+                    </div>
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Term</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container">
+    <!-- Success Toast -->
+    <div id="successToast" class="toast custom-toast toast-success" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong class="me-auto">Success!</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="successMessage">
+            Official added successfully!
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="errorToast" class="toast custom-toast toast-error" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong class="me-auto">Error!</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="errorMessage">
+            Something went wrong!
+        </div>
+    </div>
+</div>
+
+
+    <!-- Bootstrap JS (with Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript for Search -->
+<script>
+    function searchTable() {
+        let input = document.getElementById("searchInput").value.toLowerCase();
+        let rows = document.querySelectorAll("#officials-table-body tr");
+    
+        rows.forEach(row => {
+            let text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? "" : "none";
+        });
+    }
+    </script>
+
+    <script>
+        let selectedOfficialId = null;
+
+function fetchOfficials() {
+    // Get selected term
+    let selectedTerm = document.getElementById("termDropdown").value;
+    
+    // Show/hide term column based on selection
+    const termColumn = document.getElementById("termColumn");
+    if (selectedTerm) {
+        termColumn.style.display = "none";
+        // Enable Add Official button when term is selected
+        document.getElementById("addOfficialBtn").disabled = false;
+        document.getElementById("addOfficialBtn").title = "Add official to " + selectedTerm;
+    } else {
+        termColumn.style.display = "table-cell";
+        // Disable Add Official button when no term is selected
+        document.getElementById("addOfficialBtn").disabled = true;
+        document.getElementById("addOfficialBtn").title = "Select a term first";
+    }
+    
+    // Modify the fetch URL to include the term parameter if one is selected
+    let fetchUrl = "fetch_officials.php";
+    if (selectedTerm) {
+        fetchUrl += "?term=" + selectedTerm;
+    }
+    
+    fetch(fetchUrl)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById("officials-table-body").innerHTML = data;
+            attachRowClickEvents();
+            
+            // Update term info if a specific term is selected
+            if (selectedTerm) {
+                updateTermInfo(selectedTerm);
+            } else {
+                document.getElementById("termInfo").style.display = "none";
+            }
+        });
+}
+
+function updateTermInfo(term) {
+    // Count officials for the selected term
+    fetch("count_officials.php?term=" + term)
+        .then(response => response.json())
+        .then(data => {
+            const termInfo = document.getElementById("termInfo");
+            const count = data.count;
+            
+            termInfo.textContent = `${count}/11 officials`;
+            termInfo.style.display = "inline-block";
+            
+            // Update styling based on count
+            termInfo.className = "term-info";
+            if (count >= 10) {
+                termInfo.classList.add("term-warning");
+            }
+            if (count >= 11) {
+                termInfo.classList.remove("term-warning");
+                termInfo.classList.add("term-full");
+                termInfo.textContent = "FULL (11/11)";
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching term info:", error);
+        });
+}
+
+function attachRowClickEvents() {
+    document.querySelectorAll(".official-table tbody tr").forEach(row => {
+        row.addEventListener("click", function () {
+            document.querySelectorAll(".official-table tbody tr").forEach(r => r.classList.remove("selected"));
+            this.classList.add("selected");
+            selectedOfficialId = this.cells[0].textContent; // Assuming first column is ID
+            document.getElementById("editBtn").disabled = false;
+          
+        });
+    });
+}
+
+document.getElementById("editBtn").addEventListener("click", function () {
+    if (selectedOfficialId) {
+        window.location.href = `edit_official.php?id=${selectedOfficialId}`;
+    }
+});
+
+document.getElementById("deleteBtn").addEventListener("click", function () {
+    if (selectedOfficialId && confirm("Are you sure you want to delete this official?")) {
+        fetch("delete_official.php?id=" + selectedOfficialId, { method: "GET" })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                fetchOfficials(); // Refresh table
+                document.getElementById("editBtn").disabled = true;
+              
+                selectedOfficialId = null;
+            });
+    }
+});
+
+// Add event listener to filter officials by term when dropdown changes
+document.getElementById("termDropdown").addEventListener("change", function() {
+    fetchOfficials();
+    // Reset selected official when changing terms
+    selectedOfficialId = null;
+    document.getElementById("editBtn").disabled = true;
+    
+});
+
+window.onload = function() {
+    fetchOfficials();
+};
+    </script>
+
+    <!-- JavaScript -->
+    <script>
+        // Function to show the "Add New User" form
+        function showUserForm() {
+            // Hide other sections
+            document.getElementById("official-table").style.display = "none";
+            document.getElementById("official-form").style.display = "none";
+
+            
+        }
+
+        // Function to show the "Insert New Official" form
+        function showForm(formId) {
+            // Hide other sections
+            document.getElementById("official-table").style.display = "none";
+           
+
+            // Show the selected form
+            document.getElementById(formId).style.display = "block";
+        }
+
+        // Function to toggle the official table
+        function toggleTable(tableId) {
+            var table = document.getElementById(tableId);
+
+            // Hide other sections
+            document.getElementById("official-form").style.display = "none";
+          
+
+            if (table.style.display === "none" || table.style.display === "") {
+                table.style.display = "block"; // Show the table
+                fetchOfficials(); // Fetch data when showing the table
+            } else {
+                table.style.display = "none"; // Hide the table
+            }
+        }
+
+        // Function to change button color when active
+        function changeButtonColor(button) {
+            // Remove active class from all buttons
+            var buttons = document.querySelectorAll(".button-container .btn");
+            buttons.forEach(btn => btn.classList.remove("btn-active"));
+
+            // Add active class to the clicked button
+            button.classList.add("btn-active");
+        }
+    </script>
+
+   
+
+<script>
+    document.getElementById("addOfficialBtn").addEventListener("click", function () {
+        // Get the currently selected term from the dropdown
+        var selectedTerm = document.getElementById("termDropdown").value;
+        
+        if (!selectedTerm) {
+            alert("Please select a term first.");
+            return;
+        }
+        
+        // Show the modal
+        var officialModal = new bootstrap.Modal(document.getElementById("officialModal"));
+        officialModal.show();
+        
+        // Pre-select the term in the modal's term dropdown
+        document.querySelector('select[name="official_term"]').value = selectedTerm;
+        
+        // Update modal title to show selected term
+        document.getElementById("officialModalLabel").textContent = `Add Official for Term: ${selectedTerm}`;
+    });
+
+    // Add Term functionality
+document.getElementById("addTermBtn").addEventListener("click", function() {
+    // Show the Add Term modal
+    var addTermModal = new bootstrap.Modal(document.getElementById("addTermModal"));
+    addTermModal.show();
+});
+
+// Handle Add Term form submission
+document.getElementById("add-term-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    
+    // Get the start and end years
+    const startYear = document.getElementById("startYear").value;
+    const endYear = document.getElementById("endYear").value;
+    
+    // Validate that end year is greater than start year
+    if (parseInt(endYear) <= parseInt(startYear)) {
+        alert("End year must be greater than start year.");
+        return;
+    }
+    
+    // Create the term string (e.g., "2031-2034")
+    const newTerm = `${startYear}-${endYear}`;
+    
+    // Check if this term already exists in the dropdown
+    let termExists = false;
+    const options = document.getElementById("termDropdown").options;
+    
+    for (let i = 0; i < options.length; i++) {
+        if (options[i].value === newTerm) {
+            termExists = true;
+            break;
+        }
+    }
+    
+    if (termExists) {
+        alert("This term already exists in the dropdown.");
+    } else {
+        // Add the new term to both dropdowns (main and modal)
+        const termDropdown = document.getElementById("termDropdown");
+        const modalTermDropdown = document.querySelector('select[name="official_term"]');
+        
+        // Add to main dropdown
+        const newOption = document.createElement("option");
+        newOption.value = newTerm;
+        newOption.text = newTerm;
+        termDropdown.add(newOption);
+        
+        // Add to modal dropdown
+        const newModalOption = document.createElement("option");
+        newModalOption.value = newTerm;
+        newModalOption.text = newTerm;
+        modalTermDropdown.add(newModalOption);
+        
+        // Select the new term
+        termDropdown.value = newTerm;
+        
+        // Trigger the change event to filter officials by this term
+        const event = new Event('change');
+        termDropdown.dispatchEvent(event);
+        
+        // Close the modal
+        bootstrap.Modal.getInstance(document.getElementById("addTermModal")).hide();
+        
+        // Reset the form
+        document.getElementById("add-term-form").reset();
+        
+        alert(`Term ${newTerm} has been added successfully!`);
+    }
+});
+
+// Save selected term to localStorage when dropdown changes
+document.getElementById("termDropdown").addEventListener("change", function() {
+    const selectedTerm = this.value;
+    if (selectedTerm) {
+        localStorage.setItem('selectedTerm', selectedTerm);
+    } else {
+        localStorage.removeItem('selectedTerm');
+    }
+    fetchOfficials();
+    // Reset selected official when changing terms
+    selectedOfficialId = null;
+    document.getElementById("editBtn").disabled = true;
+    document.getElementById("deleteBtn").disabled = true;
+});
+
+// Load saved term on page load
+window.addEventListener('load', function() {
+    const savedTerm = localStorage.getItem('selectedTerm');
+    if (savedTerm) {
+        // Check if the saved term exists in the dropdown
+        const termDropdown = document.getElementById("termDropdown");
+        const termExists = Array.from(termDropdown.options).some(option => option.value === savedTerm);
+        
+        if (termExists) {
+            termDropdown.value = savedTerm;
+        }
+    }
+    fetchOfficials();
+
+    
+});
+
+
+</script>
+<script>
+// Toast notification functions
+function showToast(type, message) {
+    const toastId = type === 'success' ? 'successToast' : 'errorToast';
+    const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
+    
+    // Set the message
+    document.getElementById(messageId).textContent = message;
+    
+    // Show the toast
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: 4000
+    });
+    
+    toast.show();
+}
+
+// Update your existing AJAX form submission code
+// Replace the existing form submission event listener with this:
+document.getElementById("official-form-data").addEventListener("submit", function(event) {
+    event.preventDefault();
+    var formData = new FormData(this);
+    
+    fetch("insert_official.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            showToast('success', data.message || 'Official added successfully!');
+            fetchOfficials(); // Refresh the table data
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById("officialModal")).hide();
+            // Reset the form
+            document.getElementById("official-form-data").reset();
+        } else if (data.status === "error") {
+            showToast('error', data.message || 'Failed to add official. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        showToast('error', 'Network error. Please check your connection and try again.');
+    });
+});
+</script>
+
+ <script>
+        // Function to fetch and update notification counts
+        function updateNotificationCounts() {
+            fetch('get_request_counts.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const pendingCount = data.counts.pending || 0;
+                        const processingCount = data.counts.processing || 0;
+                        const completedToday = data.counts.completed_today || 0;
+                        const totalMonth = data.counts.total_month || 0;
+                        
+                        // Update main notification badge
+                        const badge = document.getElementById('request-notification-badge');
+                        const miniBadge = document.getElementById('pending-requests-mini-badge');
+                        const citizenRequestsLink = document.getElementById('citizen-requests-link');
+                        
+                        if (pendingCount > 0) {
+                            badge.textContent = pendingCount;
+                            badge.classList.remove('hidden');
+                            miniBadge.textContent = pendingCount;
+                            miniBadge.style.display = 'inline-block';
+                            citizenRequestsLink.classList.add('new-request-glow');
+                        } else {
+                            badge.classList.add('hidden');
+                            miniBadge.style.display = 'none';
+                            citizenRequestsLink.classList.remove('new-request-glow');
+                        }
+                        
+                        // Update stats cards
+                        document.getElementById('pending-count').textContent = pendingCount;
+                        document.getElementById('processing-count').textContent = processingCount;
+                        document.getElementById('completed-today').textContent = completedToday;
+                        document.getElementById('total-month').textContent = totalMonth;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching notification counts:', error);
+                });
+        }
+
+        // Function to load recent requests
+        function loadRecentRequests() {
+            fetch('get_recent_request.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const tbody = document.getElementById('requests-tbody');
+                        tbody.innerHTML = '';
+                        
+                        data.requests.forEach(request => {
+                            const row = document.createElement('tr');
+                            const statusClass = request.status === 'Pending' ? 'bg-warning' : 
+                                              request.status === 'Processing' ? 'bg-info' : 'bg-success';
+                            
+                            row.innerHTML = `
+                                <td>${request.request_id}</td>
+                                <td>${request.resident_name}</td>
+                                <td>${request.certificate_type}</td>
+                                <td>${request.purpose}</td>
+                                <td><span class="badge ${statusClass}">${request.status}</span></td>
+                                <td>${new Date(request.request_date).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="viewRequest('${request.request_id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${request.status === 'Pending' ? 
+                                        `<button class="btn btn-sm btn-success ms-1" onclick="processRequest('${request.request_id}')">
+                                            <i class="fas fa-play"></i>
+                                        </button>` : ''}
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading recent requests:', error);
+                });
+        }
+
+        // Function to manually refresh notifications
+        function refreshNotifications() {
+            updateNotificationCounts();
+            loadRecentRequests();
+        }
+
+        // Function to view request details
+        function viewRequest(requestId) {
+            // Implement view request functionality
+            alert('Viewing request: ' + requestId);
+        }
+
+        // Function to process request
+        function processRequest(requestId) {
+            if (confirm('Start processing this request?')) {
+                fetch('update_requests_status.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `request_id=${requestId}&status=Processing`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        refreshNotifications();
+                        alert('Request status updated to Processing');
+                    } else {
+                        alert('Error updating request: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error updating request status');
+                });
+            }
+        }
+
+        // Initialize notifications when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNotificationCounts();
+            loadRecentRequests();
+            
+            // Update notifications every 30 seconds
+            setInterval(updateNotificationCounts, 30000);
+        });
+
+        // Handle dropdown toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdowns = document.querySelectorAll('.dropdown-toggle');
+            dropdowns.forEach(dropdown => {
+                dropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const dropdownMenu = this.nextElementSibling;
+                    dropdownMenu.classList.toggle('show');
+                });
+            });
+        });
+    </script>
+
+     <script>
+        // Function to set active page indicator
+        function setActivePage(pageName) {
+            // Remove active class from all sidebar items
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to current page
+            const activeItem = document.querySelector(`[data-page="${pageName}"]`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+                
+                // If it's a dropdown item, also highlight the parent
+                if (activeItem.classList.contains('dropdown-item')) {
+                    const parentDropdown = activeItem.closest('.dropdown').querySelector('.dropdown-toggle');
+                    if (parentDropdown) {
+                        parentDropdown.classList.add('active');
+                    }
+                }
+            }
+        }
+
+        // Auto-detect current page based on URL
+        function detectCurrentPage() {
+            const currentPath = window.location.pathname;
+            const fileName = currentPath.split('/').pop().split('.')[0];
+            
+            // Map file names to page identifiers
+            const pageMap = {
+                'dashboard': 'dashboard',
+                'Barangay_official': 'view-officials',
+                'manage_official': 'manage-officials',
+                'Residents': 'register-residents',
+                'view_residents': 'view-residents',
+                'Request_Documents': 'request-documents',
+                'Issued Certificate': 'certificate-issuance',
+                'Administration': 'administration',
+                'Announcement': 'announcements',
+                'list_admins': 'system-settings',
+                'request_reports': 'reports'
+            };
+            
+            const currentPage = pageMap[fileName];
+            if (currentPage) {
+                setActivePage(currentPage);
+            }
+        }
+
+        
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            detectCurrentPage();
+            updateNotificationCounts();
+            
+            // Update notifications every 30 seconds
+            setInterval(updateNotificationCounts, 30000);
+        });
+
+        // Handle dropdown toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdowns = document.querySelectorAll('.dropdown-toggle');
+            dropdowns.forEach(dropdown => {
+                dropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const dropdownMenu = this.nextElementSibling;
+                    dropdownMenu.classList.toggle('show');
+                });
+            });
+        });
+
+        // Call this function after a new certificate request is submitted
+        function triggerNotificationUpdate() {
+            updateNotificationCounts();
+        }
+    </script>
+
+
+<script>
+   
+// Global variable to track editing state
+let currentEditingRow = null;
+
+// Function to enable inline editing
+function enableEdit(row) {
+    // Disable editing if another row is being edited
+    if (currentEditingRow && currentEditingRow !== row) {
+        cancelEdit(currentEditingRow);
+    }
+    
+    currentEditingRow = row;
+    row.classList.add('editing-row');
+    
+    // Get current values from the correct cells
+    const cells = row.cells;
+    const officialId = row.dataset.officialId;
+    
+    // Find the correct cell indices based on whether term column is visible
+    const termColumnVisible = document.getElementById("termColumn").style.display !== "none";
+    
+    let nameIndex, committeeIndex, positionIndex;
+    
+    if (termColumnVisible) {
+        // When term column is visible: [hidden_id, photo, name, committee, position, term, actions]
+        nameIndex = 2;
+        committeeIndex = 3;
+        positionIndex = 4;
+    } else {
+        // When term column is hidden: [hidden_id, photo, name, committee, position, actions]
+        nameIndex = 2;
+        committeeIndex = 3;
+        positionIndex = 4;
+    }
+    
+    const currentName = cells[nameIndex].textContent.trim();
+    const currentCommittee = cells[committeeIndex].textContent.trim();
+    const currentPosition = cells[positionIndex].textContent.trim();
+    
+    // Replace name cell with input
+    cells[nameIndex].innerHTML = `<input type="text" class="edit-input" value="${currentName}" data-field="name">`;
+    
+    // Replace committee cell with select
+    cells[committeeIndex].innerHTML = `
+        <select class="edit-select" data-field="committee">
+            <option value="Punong Barangay" ${currentCommittee === 'Punong Barangay' ? 'selected' : ''}>Punong Barangay</option>
+            <option value="Appropriation badac tourism" ${currentCommittee === 'Appropriation badac tourism' ? 'selected' : ''}>Appropriation, Budget & Tourism</option>
+            <option value="Bdrrmc good governance" ${currentCommittee === 'Bdrrmc good governance' ? 'selected' : ''}>BDRRMC & Good Governance</option>
+            <option value="Education and agriculture" ${currentCommittee === 'Education and agriculture' ? 'selected' : ''}>Education & Agriculture</option>
+            <option value="Health nutrition and environment" ${currentCommittee === 'Health nutrition and environment' ? 'selected' : ''}>Health, Nutrition & Environment</option>
+            <option value="Infrastructure" ${currentCommittee === 'Infrastructure' ? 'selected' : ''}>Infrastructure</option>
+            <option value="Peace & order" ${currentCommittee === 'Peace & order' ? 'selected' : ''}>Peace & Order</option>
+            <option value="Secretary" ${currentCommittee === 'Secretary' ? 'selected' : ''}>Secretary</option>
+            <option value="Sk Chairman" ${currentCommittee === 'Sk Chairman' ? 'selected' : ''}>SK Chairman</option>
+            <option value="Social services vawc and bcp" ${currentCommittee === 'Social services vawc and bcp' ? 'selected' : ''}>Social Services, VAWC & BCP</option>
+            <option value="Treasurer" ${currentCommittee === 'Treasurer' ? 'selected' : ''}>Treasurer</option>
+        </select>
+    `;
+    
+    // Replace position cell with select
+    cells[positionIndex].innerHTML = `
+        <select class="edit-select" data-field="position">
+            <option value="Punong Barangay" ${currentPosition === 'Punong Barangay' ? 'selected' : ''}>Punong Barangay</option>
+            <option value="Sangguniang Barangay Member" ${currentPosition === 'Sangguniang Barangay Member' ? 'selected' : ''}>Sangguniang Barangay Member</option>
+            <option value="Barangay Secretary" ${currentPosition === 'Barangay Secretary' ? 'selected' : ''}>Barangay Secretary</option>
+            <option value="Barangay Treasurer" ${currentPosition === 'Barangay Treasurer' ? 'selected' : ''}>Barangay Treasurer</option>
+            <option value="SK Chairman" ${currentPosition === 'SK Chairman' ? 'selected' : ''}>SK Chairman</option>
+            <option value="Other" ${currentPosition === 'Other' ? 'selected' : ''}>Other</option>
+        </select>
+    `;
+    
+    // Update action buttons (last cell)
+    const actionCell = cells[cells.length - 1];
+    actionCell.innerHTML = `
+        <button class="action-btn save-btn" onclick="saveEdit(this.closest('tr'))" title="Save Changes">
+            <i class="fas fa-check"></i>
+        </button>
+        <button class="action-btn cancel-btn" onclick="cancelEdit(this.closest('tr'))" title="Cancel">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+}
+
+// Function to save edited data
+function saveEdit(row) {
+    const officialId = row.dataset.officialId;
+    
+    // Find the correct cell indices based on whether term column is visible
+    const termColumnVisible = document.getElementById("termColumn").style.display !== "none";
+    const cells = row.cells;
+    
+    let nameIndex, committeeIndex, positionIndex;
+    
+    if (termColumnVisible) {
+        nameIndex = 2;
+        committeeIndex = 3;
+        positionIndex = 4;
+    } else {
+        nameIndex = 2;
+        committeeIndex = 3;
+        positionIndex = 4;
+    }
+    
+    // Get edited values
+    const newName = cells[nameIndex].querySelector('[data-field="name"]').value.trim();
+    const newCommittee = cells[committeeIndex].querySelector('[data-field="committee"]').value;
+    const newPosition = cells[positionIndex].querySelector('[data-field="position"]').value;
+    
+    // Validate inputs
+    if (!newName || !newCommittee || !newPosition) {
+        showToast('error', 'All fields are required.');
+        return;
+    }
+    
+    // Create FormData for AJAX request
+    const formData = new FormData();
+    formData.append('official_id', officialId);
+    formData.append('official_name', newName);
+    formData.append('official_committee', newCommittee);
+    formData.append('official_position', newPosition);
+    
+    // Send AJAX request to update
+    fetch('update_official.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Update cells with new values
+            cells[nameIndex].textContent = newName;
+            cells[committeeIndex].textContent = newCommittee;
+            cells[positionIndex].textContent = newPosition;
+            
+            // Reset action buttons
+            resetActionButtons(row);
+            row.classList.remove('editing-row');
+            currentEditingRow = null;
+            
+            showToast('success', 'Official information updated successfully!');
+        } else {
+            showToast('error', data.message || 'Failed to update official information.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Network error. Please try again.');
+    });
+}
+
+// Function to cancel editing
+function cancelEdit(row) {
+    // Reset the editing state
+    currentEditingRow = null;
+    row.classList.remove('editing-row');
+    
+    // Refresh the table to restore original values
+    fetchOfficials();
+}
+
+
+
+// Function to reset action buttons to default state
+function resetActionButtons(row) {
+    const actionCell = row.cells[row.cells.length - 1];
+    actionCell.innerHTML = `
+        <button class="action-btn edit-btn" onclick="enableEdit(this.closest('tr'))" title="Edit">
+            <i class="fas fa-edit"></i>
+        </button>
+      
+    `;
+}
+</script>
+
+<script>
+    function attachRowClickEvents() {
+    document.querySelectorAll(".official-table tbody tr").forEach(row => {
+        row.addEventListener("click", function () {
+            document.querySelectorAll(".official-table tbody tr").forEach(r => r.classList.remove("selected"));
+            this.classList.add("selected");
+            selectedOfficialId = this.dataset.officialId; // Get from data attribute
+            
+            // Enable the Update button when a row is selected
+            document.getElementById("updateOfficialBtn").disabled = false;
+            document.getElementById("updateOfficialBtn").title = "Update selected official";
+        });
+    });
+}
+
+// Update button functionality
+document.getElementById("updateOfficialBtn").addEventListener("click", function () {
+    if (selectedOfficialId) {
+        const selectedRow = document.querySelector(`tr[data-official-id="${selectedOfficialId}"]`);
+        if (selectedRow) {
+            enableEdit(selectedRow);
+            // Disable the update button while editing
+            this.disabled = true;
+        }
+    }
+});
+
+// Function to cancel editing
+function cancelEdit(row) {
+    // Reset the editing state
+    currentEditingRow = null;
+    row.classList.remove('editing-row');
+    
+    // Re-enable the Update button if a row is still selected
+    if (selectedOfficialId) {
+        document.getElementById("updateOfficialBtn").disabled = false;
+    }
+    
+    // Refresh the table to restore original values
+    fetchOfficials();
+}
+
+// In the saveEdit function, after successful save (inside the .then(data => { if (data.status === 'success') { ... })):
+// Add this line after: currentEditingRow = null;
+
+// Re-enable the Update button
+document.getElementById("updateOfficialBtn").disabled = false;
+
+
+// Add this to your term dropdown change event listener
+document.getElementById("termDropdown").addEventListener("change", function() {
+    fetchOfficials();
+    // Reset selected official when changing terms
+    selectedOfficialId = null;
+    document.getElementById("updateOfficialBtn").disabled = true;
+    document.getElementById("updateOfficialBtn").title = "Select an official to update";
+});
+</script>
+</body>
+</html>
